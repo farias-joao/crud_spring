@@ -30,40 +30,45 @@ public class LivroController {
 	LivroRepositorio livroRepositorio;
 
 	@GetMapping("/livros")
-	public ResponseEntity<List<Livro>> getAllLivros(@RequestParam(required = false) String titulo){
+	public ResponseEntity<List<Livro>> getAllLivros(@RequestParam(required = false) String titulo) {
 		try {
 			List<Livro> livros = new ArrayList<Livro>();
 
-			if(titulo == null)
+			if (titulo == null)
 				livroRepositorio.findAll().forEach(livros::add);
 			else
 				livroRepositorio.findByTitulo(titulo).forEach(livros::add);
 
-			if(livros.isEmpty()) {
+			if (livros.isEmpty()) {
 				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 			}
 
 			return new ResponseEntity<>(livros, HttpStatus.OK);
-		}catch (Exception e) {
-			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		} catch (Exception e) {
+			return new ResponseEntity<>( HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	@GetMapping("/livros/{id}")
 	public ResponseEntity<Livro> getLivroById(@PathVariable("id") String id) {
-		Optional<Livro> LivroData = livroRepositorio.findById(id);
+		try {
+			Optional<Livro> LivroData = livroRepositorio.findById(id);
 
-		if (LivroData.isPresent()) {
-			return new ResponseEntity<>(LivroData.get(), HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			if (LivroData.isPresent()) {
+				return new ResponseEntity<>(LivroData.get(), HttpStatus.OK);
+			} else {
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+			}
+
+		} catch (Exception e) {
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	@PostMapping("/livros")
-	public ResponseEntity<Livro> createLivro(@RequestBody Livro Livro) {
+	public ResponseEntity<Livro> createLivro(@RequestBody Livro livro) {
 		try {
-			Livro _Livro = livroRepositorio.save(new Livro(Livro.getTitulo(), Livro.getDescricao(), false));
+			Livro _Livro = livroRepositorio.save(new Livro(livro.getTitulo(), livro.getDescricao(), false));
 			return new ResponseEntity<>(_Livro, HttpStatus.CREATED);
 		} catch (Exception e) {
 			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -87,19 +92,27 @@ public class LivroController {
 
 	@DeleteMapping("/livros/{id}")
 	public ResponseEntity<HttpStatus> deleteLivro(@PathVariable("id") String id) {
-		try {
-			livroRepositorio.deleteById(id);
-			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-		} catch (Exception e) {
-			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		Optional<Livro> livro = livroRepositorio.findById(id);
+		if (livro.isPresent()) {
+			try {
+				livroRepositorio.deleteById(id);
+				return new ResponseEntity<>(HttpStatus.OK);
+			} catch (Exception e) {
+				return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+			}
 		}
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	}
 
+	// alterado o tipo de retorno para passar o contador
 	@DeleteMapping("/livros")
-	public ResponseEntity<HttpStatus> deleteAllLivros() {
+	public ResponseEntity<String> deleteAllLivros() {
 		try {
+			// contador de documentos da colecao
+			long totalLivros = livroRepositorio.count();
 			livroRepositorio.deleteAll();
-			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+
+			return new ResponseEntity<>(String.valueOf(totalLivros), HttpStatus.OK);
 		} catch (Exception e) {
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
@@ -111,7 +124,7 @@ public class LivroController {
 			List<Livro> Livros = livroRepositorio.findByPublicado(true);
 
 			if (Livros.isEmpty()) {
-				return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+				return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 			}
 			return new ResponseEntity<>(Livros, HttpStatus.OK);
 		} catch (Exception e) {
@@ -120,11 +133,3 @@ public class LivroController {
 	}
 
 }
-
-
-
-
-
-
-
-
