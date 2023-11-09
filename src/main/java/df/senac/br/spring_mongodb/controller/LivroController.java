@@ -71,7 +71,7 @@ public class LivroController {
 			Livro _Livro = livroRepositorio.save(new Livro(livro.getTitulo(), livro.getDescricao(), false));
 			return new ResponseEntity<>(_Livro, HttpStatus.CREATED);
 		} catch (Exception e) {
-			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+			return new ResponseEntity<>( HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
